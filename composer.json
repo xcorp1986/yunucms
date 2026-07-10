@@ -1,0 +1,10 @@
+{
+    "name": "gpt/yunucms",
+    "authors": [
+        {
+            "name": "codex",
+            "email": "kwan8888@protonmail.com"
+        }
+    ],
+    "require": {}
+}

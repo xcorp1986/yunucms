@@ -1,0 +1,190 @@
+{include file="public/header" /}
+</head>
+<body>
+	<div id="main-container">
+		{include file="public/menu" /}
+		<div class="main">
+			<div class="notice"></div>
+			<div class="main_content">
+				<div class="ui_prompt">提示：尊敬的 {:session('admin_username')}（{:session('rolename')}），欢迎您的使用，您的上次登录时间为 {:session('last_login_time')}，登录IP为 {:session('last_login_ip')}&nbsp;&nbsp;{$cloudstr}</div>
+				<div class="clearfix">
+					<div class="index_block index_block_info">
+						<a href="{:url('content/index')}">
+						<i class="fa fa-file"></i>
+						<div class="fr">
+							<p>信息总数</p>
+							<strong>{$content_count}</strong>
+						</div>
+						</a>
+					</div>
+					<div class="index_block index_block_column">
+						<a href="{:url('category/index')}">
+						<i class="fa fa-align-justify"></i>
+						<div class="fr">
+							<p>栏目总数</p>
+							<strong>{$category_count}</strong>
+						</div>
+						</a>
+					</div>
+					<div class="index_block index_block_admin">
+						<a href="{:url('diyform/index')}">
+						<i class="fa fa-book"></i>
+						<div class="fr">
+							<p>留言数</p>
+							<strong>{$diyform_count}</strong>
+						</div>
+						</a>
+					</div>
+					<div class="index_block index_block_visit">
+						<i class="fa fa-th"></i>
+						<div class="fr">
+							<p>访问总数</p>
+							<strong>3</strong>
+						</div>
+					</div>
+				</div>
+				<div class="index_box">
+					<div class="index_box_tit">网站访问统计</div>
+					<div class="index_box_content">
+						<div class="index_highcharts"></div>
+						<script type="text/javascript" src="__ADM_PUBLIC__/js/highcharts.js"></script>
+						<script type="text/javascript">
+							var data = [{$daycount}];
+							var today = new Date();
+							today.setHours(8 - 24*(data.length-1));
+							today.setMinutes(0);
+							today.setSeconds(0);
+							today.setMilliseconds(0);
+							$('.index_highcharts').highcharts({
+						        chart: {
+						            type: 'areaspline'
+						        },
+						        title: {
+						            text: ''
+						        },
+						        legend: {
+						            layout: 'vertical',
+						            align: 'left',
+						            verticalAlign: 'top',
+						            x: 150,
+						            y: 100,
+						            floating: true,
+						            borderWidth: 1,
+						            backgroundColor: '#FFFFFF'
+						        },
+						        xAxis: {
+						            allowDecimals: false,
+						            type: 'datetime',
+						            dateTimeLabelFormats: {
+						                day: '%b-%e'
+						            },
+						            labels:{
+						            	maxStaggerLines :3
+						            }
+						        },
+						        yAxis: {
+						            allowDecimals: false,
+						            //tickPixelInterval: 200,
+						            labels:{
+						            	maxStaggerLines :3
+						            },
+						            title: {
+						                text: ''
+						            }
+						        },
+						        tooltip: {
+						            pointFormat: '访问量: {point.y}次'
+						        },
+						        credits: {
+						            enabled: false //禁用版权信息
+						        },
+						        plotOptions: {
+						            areaspline: {
+						                fillOpacity: 0.5
+						            }
+						        },
+						        series: [{
+						            name: '',
+						            showInLegend: false,
+						            data: data,
+						            pointStart: Date.parse(today),
+						            pointInterval: 24 * 3600 * 1000
+						        }]
+						    });
+						</script>
+					</div>
+				</div>
+				{notempty name="mainkeywords"}
+				<div class="index_box">
+					<div class="index_box_tit">关键词监控</div>
+					<div class="index_box_content" style="min-height:200px;">
+						<div class="key_table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <td class="th">网站名称</td>
+                                        <td class="th">授权域名</td>
+                                        <td class="th">收录</td>
+                                        <td class="th">关键词数量</td>
+                                        <td class="th">达标率</td>
+                                        <td class="th">创建时间</td>
+                                        <td class="th">状态</td>
+                                        <td class="th">操作</td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>{$mainkeywords.name}</td>
+                                        <td>{$mainkeywords.domain}</td>
+                                        <td>{$mainkeywords.collect}</td>
+                                        <td>{$mainkeywords.count}</td>
+                                        <td>{$mainkeywords.standard_rate}%</td>
+                                        <td>{$mainkeywords.create_time}</td>
+                                        <td>
+                                            {if condition="$mainkeywords['state'] == 1"}
+                                                <span class="color">监控中</span>
+                                            {else/}
+                                                关闭
+                                            {/if}
+                                        </td>
+                                        <td>
+                                            <a class="history btn1" style="background:url(__ADM_PUBLIC__/img/history.png);" href="http://ranking.yunucms.com/index.php/keyword/id/{$mainkeywords.id}/type/0/year/{:date('Y')}/month/{:date('n')}" target="_blank" title="历史排名"></a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div class="table_info">
+                                <ul>
+                                    <li class="time color">
+                                        排名更新时间   {$mainkeywords.time}
+                                    </li>
+                                    {volist name="mainkeywords['list']" id="vo"}
+                                    <li>
+                                        <span class="kname"><a href="http://www.baidu.com/s?rn=50&wd={$vo.keyword}" target="_blank">{$vo.keyword}</a></span>
+                                        <span class="krank">排名：{$vo.rank}
+	                                        {if condition="$vo['rank_prev'] eq '' || $vo['rank'] eq $vo['rank_prev']"}
+	                                        	<i>-</i>
+	                                        {elseif condition="(int)$vo['rank'] lt (int)$vo['rank_prev']"/}
+	                                        	<i>↑</i>
+	                                        {else/}
+	                                        	<i class="green">↓</i>
+	                                        {/if}
+                                        </span>
+                                    </li>
+                                    {/volist}
+                                </ul>
+                                <div style="clear:both;"></div>
+                            </div>
+                        </div>
+                        
+					</div>
+				</div>
+				{/notempty}
+				<div class="copy">
+					Powered By <a href="http://{$copy_url}" target="_blank">{$copy_url}</a> @ 2018 {$copy_name} Inc.
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

@@ -1,0 +1,578 @@
+{include file="public/header" /}
+<style>
+.content_nav_list{
+    overflow:auto;
+    height: 100%;
+}
+.content_nav_list i { display: inline-block; width: 30px; text-align: center; color: #333; height: 35px; line-height: 35px; vertical-align: top; }
+</style>
+<link rel="stylesheet" type="text/css" href="__ADM_PUBLIC__/css/diqu.css">
+<script type="text/javascript" src="__ADM_PUBLIC__/js/diqu.js"></script>
+<link rel="stylesheet" type="text/css" href="__ADM_PUBLIC__/css/masonry.css">
+<script type="text/javascript" src="__ADM_PUBLIC__/js/masonry-docs.min.js"></script>
+</head>
+<body>
+	<div id="main-container">
+		{include file="public/menu" /}
+		<div class="main">
+			<div class="sidebar2" >
+				<a class="btn_expand" href="javascript:;"></a>
+				<a class="btn_contract" href="javascript:;"></a>
+				
+				<ul class="content_nav_list">
+					{notempty name="catlist"}
+		            {volist name="catlist" id="v"}
+		            <li data-pid="{$v['pid']}">
+                        <a href="{if $v.cover eq 0}{:url('content/index',['cid'=>$v['id']])}{else}{:url('category/editcategory',['id'=>$v['id']])}{/if}" {if $v.id eq $cate.id}class="v-link-active"{/if} style="{if $v.cover eq 1}color:#999;{/if}">
+                            {if $v.pid eq 0}
+                                <i data-id="{$v['id']}" ></i>
+                            {else}
+                                <span style="display:inline-block;width:{$v.leftpin / 2}px;"></span>├ 
+                            {/if}
+                            {$v['title']}
+                        </a>
+                    </li>
+		            {/volist}
+		            {/notempty}
+				</ul>
+			</div>
+            <script type="text/javascript">
+                ;(function () {
+                    var item = $('.content_nav_list>li');
+                    var localStorage = window.localStorage || {
+                        getItem: function () {return false},
+                        setItem: function () {return false},
+                        removeItem: function () {return false}
+                    }
+                    var active = localStorage.getItem('content_nav_list_active');
+                    var slideToggle = function (obj) {
+                        if (obj.attr('data-pid') > 0) {
+                            obj.slideToggle();
+                            slideToggle(obj.next());
+                        }
+                    }
+
+                    item.filter('[data-pid!=0]').hide();
+                    item.each(function (i, v) {
+                        var $this = $(v);
+                        var pid = $this.next().attr('data-pid');
+                        if (pid > 0) {
+                            $this.find('i').addClass('fa fa-folder');
+                        }
+                    }).find('i').on('click', function(event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        var $this = $(this);
+                        var id = $this.attr('data-id');
+                        
+                        if (!$this.hasClass('fa')) return;
+
+                        slideToggle($this.closest('li').next());
+                        // item.filter('[data-pid='+id+']').slideToggle();
+                        if ($this.hasClass('fa-folder')) {
+                            $this.removeClass('fa-folder').addClass('fa-folder-open');
+                            localStorage.setItem('content_nav_list_active', id);
+                        } else {
+                            $this.removeClass('fa-folder-open').addClass('fa-folder');
+                            localStorage.removeItem('content_nav_list_active');
+                        }
+                    });
+                    if (active) {
+                        item.find('i').filter('[data-id='+active+']').click();
+                    }
+                })();
+            </script>
+			{notempty name="cate.title"}
+			<div class="content_box">
+
+                <div class="layui-form check_diqu" id="diqu">
+                </div>
+
+				<div class="title">
+					<span>{$cate.title}</span>
+				</div>
+
+                <a class="btn mr10" href="{:url('addcontent',['cid'=>$cate['id']])}">添加内容</a>
+                <div class="btn-group">
+                    <button type="button" class="btn dropdown-toggle colorfff" data-toggle="dropdown">批量操作&nbsp;&nbsp;<span class="caret"></span></button>
+                    <ul class="dropdown-menu" role="menu">
+                        <li><a href="{:url('batchaddcontent',['cid'=>$cate['id']])}">添加</a></li>
+                        <li><a class="do-action" data-type="doDelete" data-href="{:url('delcontent')}">删除</a></li>
+                        <li><a class="do-action" data-type="doState" data-href="{:url('copyContent')}">复制</a></li>
+                        <li><a class="do-action" data-type="doState" data-href="{:url('stateall',['istop'=>1])}">推荐</a></li>
+                        <li><a class="do-action" data-type="doState" data-href="{:url('stateall',['istop'=>0])}">取消推荐</a></li>
+                        <li><a class="do-action" data-type="doState" data-href="{:url('mainurl',['mainurl'=>1])}">链接同步主站</a></li>
+                        <li><a class="do-action" data-type="doState" data-href="{:url('mainurl',['mainurl'=>0])}">取消同步主站</a></li>
+                        <li class="divider"></li>
+                        {if config('sys.api_bdts') eq 1}<li><a class="do-action" data-type="doState" data-href="{:url('baidu')}">百度推送</a></li>{/if}
+                        {if config('sys.api_bdxzh') eq 1}<li><a class="do-action" data-type="doState" data-href="{:url('xzh')}">熊掌号推送</a></li>{/if}
+                        {if config('sys.api_media') eq 1}<li><a class="do-action media">媒体联盟推送</a></li>{/if}
+                    </ul>
+                </div>
+				
+
+				<div class="search fr">
+					<form  class="layui-form layui-form-pane" id="formrec" method="post" role="form">
+					<input type="text" id="key" value="{:input('param.key')}" placeholder="请输入文章标题名称" >
+					<a class="icon-search" href="javascript:;"></a>
+					</form>
+				</div>
+				<div class="clear"></div>
+				<div class="table" v-el:table>
+					<table class="layuitable">
+						<thead>
+							<tr>
+								<th width="50"><input type="checkbox" class="selected-all"></th>
+								<th width="60"><span>编号</span></th>
+								<th ><span>标题</span></th>
+								<th width="100"><span>分类</span></th> 
+								<th width="60"><span>浏览</span></th>
+								<th width="80"><span>发布时间</span></th>
+								<th width="80"><span>推荐</span></th>
+								<th width="80"><span>排序</span></th>
+								<th width="200"><span>操作</span></th>
+							</tr>
+						</thead>
+						<script id="arlist" type="text/html">
+                            {{# for(var i=0;i<d.length;i++){  }}
+                            <tr class="long-td">
+                                <td>
+                                    <div class="icheckbox_square-green diychk" style="position: relative;"><input type="checkbox" style="position: absolute; opacity: 0;width:0;height:0px;" name="ck" ids="{{d[i].id}}" value="true" lay-filter="chk111"><ins class="iCheck-helper"></ins></div>  
+                                </td>
+                                <td>{{d[i].id}}</td>
+                                <td><input class="edittitle" type="text" data-id="{{d[i].id}}" title="{{d[i].title}}" value="{{d[i].title}}"/></td>
+                                <td>{{d[i].ctitle}}</td>
+                                <td>{{d[i].click}}</td>
+                                <td {{# if(d[i].isyy){}}style="color:red;font-weight:bold;"{{#  } }}><font title="{{d[i].create_time}}">{{d[i].time}}</font></td>
+                                <td><a href="javascript:;" class="change_status" data-id="{{d[i].id}}"> <div class="layui-unselect layui-form-switch {{# if(d[i].istop == 1){}} layui-form-onswitch{{#  } }} "><i></i></div> </a></td>
+                                <td><input class="sort" type="number" maxlength="4" data-id="{{d[i].id}}" value="{{d[i].sort}}"/></td>
+                                <td>
+                                    <a class="btn" href="{{d[i].indexurl}}" target='_blank'>查看</a>
+                                    <a class="btn do-action" data-type="doEdit" data-href="{:url('editcontent')}" data-id="{{d[i].id}}&gopage={{d[i].gopage}}">编辑</a>
+                                    <a class="btn do-action" data-type="doDelOne" data-href="{:url('delcontent')}" data-id="{{d[i].id}}">删除</a>
+                                </td>
+                            </tr>
+                            {{# } }}
+                        </script>
+                        <tbody id="article_list" class="article_list"></tbody>
+
+						<tbody>
+
+							<tr class="last_tr">
+								<td><input type="checkbox" class="selected-all"></td>
+								<td colspan="8" class="tal">
+			
+									<form  class="layui-form layui-form-pane" id="formrec" method="post" role="form">
+									<div style="width:250px; float:left;" class="mr10">
+											<select name="ftype" id="ftype">
+				                                <option value="0">选择分类</option>
+				                                {foreach name="catlist" id='v' }
+				                                <option value="{$v.id}" {if ($v.cover neq 0) or ($v.mid neq $cate.mid) or ($v.id eq $cate.id)}disabled{/if}>{if $v.pid neq 0}{$v.leftkong}├ {/if}{$v.title}</option>
+				                                {/foreach}
+				                            </select>
+			                        </div>
+			                        <div style="float:left;" class="mr10"><a class="btn do-action move_category" style="height:37px;line-height:37px;">批量移动到</a></div>
+			                        </form>
+
+                                    <form  class="layui-form layui-form-pane" id="formrec" method="post" role="form">
+                                    <div style="float:left;" class="mr10">
+                                        <input id="area" type="hidden" name="area">
+                                        <a class="btn" id="open_diqu" style="height:37px;line-height:37px;">批量设置地区</a>          
+                                    </div>
+                                    </form>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+                
+                <div id="AjaxPage" style="float: right;margin-top:-10px;margin-left:10px;"></div>
+                <div class="CountPage" style="float: right; line-height:30px;">
+                    共 {$count} 条&nbsp;&nbsp;
+                    <select name="list_rows" id="list_rows" class="list_rows">
+                        <option value="10" {if config('sys.admin_list_rows') eq 10}selected{/if}>10 条/页</option>
+                        <option value="20" {if config('sys.admin_list_rows') eq 20}selected{/if}>20 条/页</option>
+                        <option value="50" {if config('sys.admin_list_rows') eq 50}selected{/if}>50 条/页</option>
+                        <option value="100" {if config('sys.admin_list_rows') eq 100}selected{/if}>100 条/页</option>
+                    </select>            
+                </div>
+                
+                <div style="clear:both;"></div>
+			</div>
+			{else /}
+			<div class="content_box" style="padding:0px;">
+
+                <div class="content_cover_page">
+                    <div id="masonry" class="container-fluid">
+                        
+                        {notempty name="maincatlist"}
+                        {volist name="maincatlist" id="v"}
+                        <div class="bDiv pubuliu">
+                            <table class="flex-table autoht">
+                                <tbody>
+                                    <tr class="parent_id_0" data-level="0" data-id="{$v['parentcat']['id']}">
+                                        <td class="typename">
+                                            <div>
+                                                <img src="__ADM_PUBLIC__/img/tv-collapsable-last.gif" onclick="treeClicked(this);" class="has_children">
+                                                <a href="{if $v['parentcat']['cover'] eq 0}{:url('content/index',['cid'=>$v['parentcat']['id']])}{else}{:url('category/editcategory',['id'=>$v['parentcat']['id']])}{/if}">{$v['parentcat']['title']}</a>
+                                                {if $v['parentcat']['cover'] eq 0}<i class="arctotal">（{$v['parentcat']['concount']} 条数据）</i>{/if}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="w160 tar">
+                                                {if $v['parentcat']['cover'] eq 0}
+                                                    <a href="{:url('content/addcontent',['cid'=>$v['parentcat']['id']])}" class="btn blue"><i class="fa fa-plus"></i>发布</a>
+                                                    <a href="{:url('content/index',['cid'=>$v['parentcat']['id']])}" class="btn blue"><i class="fa fa-pencil-square-o"></i>内容</a>
+                                                {else/}
+                                                    <a href="{:url('category/editcategory',['id'=>$v['parentcat']['id']])}" class="btn blue"><i class="fa fa-pencil-square-o"></i>编辑</a>
+                                                {/if}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {notempty name="v.childcat"}
+                                    {volist name="v.childcat" id="child"}
+                                    <tr class="parent_id_{$child['pid']}" data-level="{$child['lvl']}" data-id="{$child['id']}">
+                                        <td class="typename">
+                                            <div>
+                                                <span class="level level{$child['lvl']}"></span>
+                                                <img src="__ADM_PUBLIC__/img/tv-collapsable-last.gif" onclick="treeClicked(this);" class="has_children">
+                                                <a href="{if $child['cover'] eq 0}{:url('content/index',['cid'=>$child['id']])}{else}{:url('category/editcategory',['id'=>$child['id']])}{/if}">{$child['title']}</a>
+                                                {if $child['cover'] eq 0}<i class="arctotal">（{$child['concount']} 条数据）</i>{/if}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="w160 tar">
+                                                {if $child['cover'] eq 0}
+                                                    <a href="{:url('content/addcontent',['cid'=>$child['id']])}" class="btn blue"><i class="fa fa-plus"></i>发布</a>
+                                                    <a href="{:url('content/index',['cid'=>$child['id']])}" class="btn blue"><i class="fa fa-pencil-square-o"></i>内容</a>
+                                                {else/}
+                                                    <a href="{:url('category/editcategory',['id'=>$child['id']])}" class="btn blue"><i class="fa fa-pencil-square-o"></i>编辑</a>
+                                                {/if}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {/volist}
+                                    {/notempty}
+                                </tbody>
+                            </table>
+                        </div>
+                        {/volist}
+                        {/notempty}
+                    </div>
+                </div>
+                
+            </div>
+			{/notempty}
+		</div>
+	</div>
+<script>
+    var laytpl,laypage;
+    var url='{:url("content/index",['cid'=>$cate['id']])}';
+    var allpages='{$allpage}';
+    layui.use(['layer', 'form','laypage','common', 'icheck','laytpl'], function () {
+        var $ = layui.jquery, layer = layui.layer, common = layui.common, form = layui.form(),box = '#diqu';
+        $form = $('form');
+        laytpl =layui.laytpl;
+        laypage = layui.laypage;
+
+        {notempty name="cate.title"}
+        	common.Ajaxpage({$gopage});
+        {/notempty}
+
+        //加载单选框样式
+        $((".table [type='checkbox']")).iCheck({
+            checkboxClass: 'icheckbox_square-green',
+        });
+
+        //全选
+        $(document).on('ifChanged','.selected-all', function (event) {
+            if ($(this).prop("checked")) {
+                $("#article_list .diychk").addClass('checked');
+                $("#article_list .diychk").children('input:checkbox').prop("checked", true);
+            }else{
+                $("#article_list .diychk").removeClass('checked');
+                $("#article_list .diychk").children('input:checkbox').prop("checked", false);
+            }
+        });
+        $(document).on('click','.diychk', function () {
+            if ($(this).hasClass('checked')) {
+                $(this).removeClass('checked');
+                $(this).children('input:checkbox').prop("checked", false);
+            }else{
+                $(this).addClass('checked');
+                $(this).children('input:checkbox').prop("checked", true);
+            }
+        });
+
+        $('#open_diqu').on('click', function(){
+            if (1 > $(".layuitable .article_list input:checked").size()){
+                layer.alert("对不起，请选中您要操作的记录！", { title: "提示", icon: 2, time: 5000, resize: false, zIndex: layer.zIndex });
+            }else{
+            	$.ajax({
+                    url: '{:url("getarea")}',
+                    dataType: "html",
+                    type: "POST",
+                    success: function(data){
+                		$(box).html(data);
+                        area_select($("#diqu input:checkbox"));
+                    }
+                }); 
+
+                var diqulay = layer.open({
+                    title: '选择地区',
+                    type: 1,
+                    content: $(box),
+                    skin: 'layer_diqu',
+                    area: ['60%','50%'],
+                    btn: '确定',
+                    yes: function(index, layero){
+                        var value = $("input:checkbox[name='diqu[]']:checked").map(function(index, el) {
+                            return $(el).val();
+                        }).get().join(',');
+                        for (var c = "", d = $(".layuitable .article_list input:checked"), e = 0; e < d.length; e++) d[e].checked && "disabled" != $(d[e]).attr("disabled") && (c += $(d[e]).attr("ids") + ",");
+                        $('#area').val(value);
+                        $.ajax({
+                            url: '{:url("movearea")}',
+                            dataType: "json",
+                            data:{'ids':c, aid:value},
+                            type: "POST",
+                            success: function(data){
+                                if(data.code == 1){
+                                    parent.layer.alert(data.msg, {
+                                        title: "提示", icon: 1, resize: false, zIndex: layer.zIndex
+                                    });
+                                    layer.close(diqulay);
+                                }
+                            }
+                        }); 
+                    }
+                });
+            }
+        });
+        diqu(layer, form, box);
+
+        $(document).on('blur','.edittitle', function () {
+            var id = $(this).attr('data-id');
+            var obs = $(this);
+            $.ajax({
+                url: '{:url("edittitle")}',
+                dataType: "json",
+                data:{'id':id,'title':obs.val()},
+                type: "POST",
+                success: function(data){
+                    //window.location = window.location;
+                },
+                error:function(ajaxobj)
+                {
+                    if(ajaxobj.responseText!='')
+                        alert(ajaxobj.responseText);
+                }
+            });
+        });
+
+        $('.media').on('click', function(){
+            if (1 > $(".layuitable .article_list input:checked").size()){
+                layer.alert("对不起，请选中您要操作的记录！", { title: "提示", icon: 2, time: 5000, resize: false, zIndex: layer.zIndex });
+            }else{
+                var diqulay = layer.confirm('此操作不可逆，请再次确认是否要操作',{
+                    title: '确认更新这些信息',
+                    btnAlign: 'c',
+                    resize: false,
+                    icon: 3,
+                    btn: ['确定操作', '我再想想'],
+                    yes: function(index, layero){
+                        parent.layer.alert("数据正在推送中...请耐心等待...", {
+                            title: "提示", icon: 1, resize: false, zIndex: layer.zIndex
+                        });
+                        layer.close(diqulay);
+                        var value = $("input:checkbox[name='diqu[]']:checked").map(function(index, el) {
+                            return $(el).val();
+                        }).get().join(',');
+                        for (var c = "", d = $(".layuitable .article_list input:checked"), e = 0; e < d.length; e++) d[e].checked && "disabled" != $(d[e]).attr("disabled") && (c += $(d[e]).attr("ids") + ",");
+                        $.ajax({
+                            url: '{:url("media")}',
+                            dataType: "json",
+                            data:{'ids':c, aid:value},
+                            type: "POST",
+                            success: function(data){
+                                if (data.code == 1) {
+                                    parent.layer.alert(data.msg, {
+                                        title: "提示", icon: 1, resize: false, zIndex: layer.zIndex
+                                    }, function () {
+                                        location.href = location.href;
+                                    });
+                                }
+                                else {
+                                    parent.layer.alert(data.msg, {
+                                        title: "提示", icon: 2, resize: false, zIndex: layer.zIndex
+                                    }, function () {
+                                        location.href = location.href;
+                                    });
+                                }
+                            }
+                        }); 
+                    }
+                });
+            }
+        });
+        treeClicked('open');
+    });
+
+    function masonry() {
+        var $container = $('#masonry');
+        $container.imagesLoaded(function() {
+            $container.masonry({
+                itemSelector: '.pubuliu',
+                gutter: 10,
+                isAnimated: true,
+            });
+        });
+    }
+
+
+    function treeClicked(obj,all){
+        var open_img_src = '__ADM_PUBLIC__/img/tv-expandable.gif';
+        var close_img_src = '__ADM_PUBLIC__/img/tv-collapsable-last.gif';
+        if (typeof obj == 'string') {
+            if (obj == 'open') {
+                $('tr[class^=parent_id_]').show().find('img').attr('src', close_img_src);
+            } else {
+                $('tr[data-level=0]').find('img.has_children').attr('src', close_img_src).trigger('click');
+                $('tr[class^=parent_id_]').removeClass('trSelected');
+            }
+            masonry();
+        } else {
+            var src = $(obj).attr('src');
+            if(src == open_img_src) {
+                $(".parent_id_"+$(obj).closest('tr').attr('data-id')).show();
+                $(obj).attr('src',close_img_src);
+            } else {
+                $(obj).attr('src',open_img_src);
+                var tbl = $(obj).closest('table')[0];
+                cur_tr = obj.parentNode.parentNode.parentNode;
+                var fnd = false;
+                for (i = 0; i < tbl.rows.length; i++) {
+                    var row = tbl.rows[i];
+
+                    if (row == cur_tr) {
+                        fnd = true;
+                    } else {
+                        if (fnd == true) {
+                            var level = parseInt($(row).data('level'));
+                            var cur_level = $(cur_tr).data('level');
+                            if (level > cur_level) {
+                                $(row).hide();
+                                $(row).find('img.has_children').attr('src',open_img_src);
+                            } else {
+                                fnd = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            masonry();
+        }
+    }
+
+    //移动分类
+    $(document).on('click','.move_category', function () {
+    	if ($('#ftype').val() == 0){
+    		layer.alert("对不起，请选中需要移动到的分类！", { title: "提示", icon: 2, time: 5000, resize: false, zIndex: layer.zIndex });
+    		return false;
+    	}
+    	if (1 > $(".layuitable .article_list input:checked").size()){
+    		layer.alert("对不起，请选中您要操作的记录！", { title: "提示", icon: 2, time: 5000, resize: false, zIndex: layer.zIndex });
+    	}else{
+    		for (var c = "", d = $(".layuitable .article_list input:checked"), e = 0; e < d.length; e++) d[e].checked && "disabled" != $(d[e]).attr("disabled") && (c += $(d[e]).attr("ids") + ",");
+    		$.ajax({
+                url: '{:url("movecategory")}',
+                dataType: "json",
+                data:{'ids':c, cid:$('#ftype').val()},
+                type: "POST",
+                success: function(data){
+                    if(data.code == 1){
+                    	parent.layer.alert(data.msg, {
+                            title: "提示", icon: 1, resize: false, zIndex: layer.zIndex
+                        }, function () {
+                            location.href = location.href;
+                        });
+                    }
+                }
+            });
+    	}
+
+    });
+    
+    $(document).on('click','.change_status', function () {
+        var id=$(this).attr('data-id');
+        var obs=$(this);
+        $.ajax({
+            url: '{:url("statecontent")}',
+            dataType: "json",
+            data:{'id':id},
+            type: "POST",
+            success: function(data){
+                if(data.code == 1){
+                    obs.find('div').removeClass('layui-form-onswitch');
+                    layer.msg(data.msg,{icon:2,time:1500,shade: 0.1,});
+                }else{
+                    obs.find('div').addClass('layui-form-onswitch');
+                    layer.msg(data.msg,{icon:1,time:1500,shade: 0.1,});
+                }
+            },
+            error:function(ajaxobj)
+            {
+                if(ajaxobj.responseText!='')
+                    alert(ajaxobj.responseText);
+            }
+        });
+    });
+    
+    $(document).on('change','#list_rows', function () {
+        var list_rows = $(this).val();
+    	$.ajax({
+            url: '{:url("system/listrows")}',
+            dataType: "json",
+            data:{'list_rows':list_rows},
+            type: "POST",
+            success: function(data){
+                location.href = location.href;
+                
+            }
+        }); 
+    });
+
+    $(document).on('click','.icon-search', function () {
+        window.location.href = "{:url("content/index",['cid'=>$cate['id']])}?key="+$('#key').val();
+    });
+
+    $("#key").keydown(function (event) {
+        if (event.keyCode==13){
+            window.location.href = "{:url("content/index",['cid'=>$cate['id']])}?key="+$('#key').val();
+            return false;
+        };
+    });
+
+    $(document).on('blur','.sort', function () {
+        var id = $(this).attr('data-id');
+        var obs = $(this);
+        $.ajax({
+            url: '{:url("sortcontent")}',
+            dataType: "json",
+            data:{'id':id,'sort':obs.val()},
+            type: "POST",
+            success: function(data){
+                //layer.msg(data.msg,{icon:1,time:500,shade: 0.1,});
+            },
+            error:function(ajaxobj)
+            {
+                if(ajaxobj.responseText!='')
+                    alert(ajaxobj.responseText);
+            }
+        });
+   	});
+</script>
+</body>
+</html>

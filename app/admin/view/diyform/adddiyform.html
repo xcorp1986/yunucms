@@ -1,0 +1,157 @@
+{include file="public/header" /}
+</head>
+<body>
+    <div id="main-container">
+        {include file="public/menu" /}
+        <div class="main">
+            <div class="notice">{$position.url}</div>
+            <div class="main_content">
+                <div class="title">
+                    <span>{$position.name}</span>
+                </div>
+				<form  class="layui-form layui-form-pane" id="formrec" method="post" role="form">
+					<div class="layui-form-item">
+			            <label class="layui-form-label">表单名称</label>
+			            <div class="layui-input-inline">
+			                <input class="layui-input" type="text" name="title" placeholder="模型名称" lay-verify="required">
+			            </div>
+			        </div>
+
+			        <div class="layui-form-item">
+                        <label class="layui-form-label">数据表名</label>
+                        <div class="layui-input-inline">
+                            <input class="layui-input" type="text" name="tabname" placeholder="数据表名" lay-verify="required" onkeyup="this.value=this.value.replace(/[^a-zA-Z]/g,'')" maxlength="20">
+                        </div>
+                        <div class="layui-input-inline"><font class="font_tip">纯字母组合，最大长度20个字符</font></div>
+                    </div>
+
+					<div class="layui-form-item">
+			            <label class="layui-form-label">描述说明</label>
+			            <div class="layui-input-inline">
+			                <input class="layui-input" type="text" name="remark" placeholder="描述说明" lay-verify="required">
+			            </div>
+			        </div>
+
+			        <div class="layui-form-item">
+                        <label class="layui-form-label">验证方式</label>
+                        <div class="layui-input-inline">
+                            <input type="radio" name="yzcode" value="0" title="关闭" checked>
+                            <input type="radio" name="yzcode" value="1" title="验证码">
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">状态</label>
+                        <div class="layui-input-inline">
+                            <input type="checkbox" name="status" checked lay-skin="switch" lay-filter="switchTest">
+                        </div>
+                    </div>
+
+                    <div class="title_bar mb20">
+                        邮件提醒&nbsp;&nbsp;&nbsp;&nbsp;<font class="font_tip">表单有新消息，接收到邮件提醒，请先：表单管理->提醒设置->邮件提醒 设置正确信息</font>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">是否开启</label>
+                        <div class="layui-input-inline">
+                            <input type="checkbox" name="mailwarn" lay-skin="switch" lay-filter="mailswitch">
+                        </div>
+                    </div>
+                    <div class="layui-form-item mail none">
+                        <label class="layui-form-label">接收邮件地址</label>
+                        <div class="layui-input-inline">
+                            <input class="layui-input w700" type="text" name="mailadd" value="" placeholder="接收邮件地址">
+                        </div>
+                    </div>
+                    <div class="layui-form-item mail none">
+                        <label class="layui-form-label">接收邮件标题</label>
+                        <div class="layui-input-inline">
+                            <input class="layui-input w700" type="text" name="mailtitle" value="" placeholder="接收邮件标题">
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item mail none">
+                        <label class="layui-form-label">接收邮件内容</label>
+                        <div class="layui-input-inline">
+                            <textarea name="mailcontent" id="content"></textarea>
+                        </div>
+                    </div>
+
+					<div class="layui-form-item">
+	                    <label class="layui-form-label"></label>
+	                    <div class="layui-input-inline">
+			              <button class="btn" lay-submit="" lay-filter="save" data-href='{:url('adddiyform')}'>提交</button>
+	                    </div>
+			        </div>
+				</form>
+
+			</div>
+		</div>
+	</div>
+<script type="text/javascript">
+    var option= {toolbars: [[
+            'fullscreen', 'source', '|',
+            'bold', 'italic', 'underline', 'strikethrough', 'forecolor', 'backcolor',
+            'paragraph', 'fontfamily', 'fontsize', '|',
+            'indent', 'justifyleft', 'justifycenter', 'justifyright', 'justifyjustify', '|',
+            'link', 'unlink',
+    ]]};
+    window.UEDITOR_HOME_URL = '__UEDITOR__/';
+    window.onload = function() {
+        window.UEDITOR_CONFIG.initialFrameWidth=700;
+        window.UEDITOR_CONFIG.initialFrameHeight=300;
+        UE.getEditor('content', option);
+    }
+</script>
+<script type="text/javascript" src="__UEDITOR__/ueditor.config.js"></script>
+<script type="text/javascript" src="__UEDITOR__/ueditor.all.min.js"></script>  
+<script>
+layui.use(['form','common'], function(){
+        var $ = layui.jquery;
+        $form = $('form');
+        var form = layui.form(),layer = layui.layer, common=layui.common;
+
+        //监听提交
+        form.on('submit(save)', function(data){
+            var sub = true;
+            var url = $(this).data('href');
+            if(url){
+                if(sub){
+                    $.ajax({
+                        url: url,
+                        type: 'post',
+                        dataType: 'json',
+                        data: data.field,
+                        success: function (info) {
+                            if (info.code == 1) {
+                                common.layerAlertSHref(info.msg, '提示', "{:url('diyform/index')}");
+                            }
+                            else {
+                                common.layerAlertE(info.msg, '提示');
+                                $(data.elem).removeAttr("disabled").text("提交");
+                            }
+                        },
+                        beforeSend: function () {
+                            $(data.elem).attr("disabled", "true").text("提交中...");
+                        },
+                        error: function (XMLHttpRequest, textStatus, errorThrown) {
+                            common.layerAlertE(textStatus, '提示');
+                        }
+                    });
+                }
+            }else{
+                common.layerAlertE('链接错误！', '提示');
+            }
+            return false;
+        });
+
+        form.on('switch(mailswitch)', function(data) {
+            if (this.checked) {
+                $(".mail").show();
+            }else{
+                $(".mail").hide();
+            }
+        });
+    });
+</script>
+</body>
+</html>

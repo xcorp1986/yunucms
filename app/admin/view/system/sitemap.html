@@ -1,0 +1,29 @@
+{include file="public/header" /}
+</head>
+<body>
+    <div id="main-container">
+        {include file="public/menu" /}
+        <div class="main">
+            <div class="notice">{$position.url}</div>
+            <div class="main_content">
+                <div class="title">
+                    <span>{$position.name}</span>
+                </div>
+				<form  class="layui-form layui-form-pane" id="formrec" method="post" role="form">
+				<div class="ui_prompt">
+					<p class="ui_prompt_tit">温馨提示</p>
+					<p>· 信息源已生成：<a href="/rss.xml" target="_blank">/rss.xml</a> </p>
+					<p>· XML站点地图已生成：<a href="/sitemap.xml" target="_blank">/sitemap.xml</a> </p>
+					<p>· HTM站点地图已生成：<a href="/sitemap.htm" target="_blank">/sitemap.htm</a> </p>
+					<p>· TXT站点地图已生成：<a href="/sitemap.txt" target="_blank">/sitemap.txt</a> </p>
+					<p>· 手动触发URL：{:config('sys.site_protocol')}://{:config('sys.site_url')}/index.php?s=admin/api/upsitemap</a> </p>
+				</div>
+
+
+				</form>
+			</div>
+			
+		</div>
+	</div>
+</body>
+</html>

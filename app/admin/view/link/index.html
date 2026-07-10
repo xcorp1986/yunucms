@@ -1,0 +1,156 @@
+{include file="public/header" /}
+<link rel="stylesheet" type="text/css" href="__ADM_PUBLIC__/css/diqu.css">
+<script type="text/javascript" src="__ADM_PUBLIC__/js/diqu.js"></script>
+</head>
+<body>
+	<div id="main-container">
+		{include file="public/menu" /}
+		<div class="main">
+			<div class="notice">{$position.url}</div>
+			<div class="main_content">
+				<div class="layui-form check_diqu" id="diqu"></div>
+				<div class="title">
+					<span>{$position.name}</span>
+				</div>
+				<a class="btn mr10" href="{:url('addlink')}">添加</a><a class="btn do-action" data-type="doDelete" data-href="{:url('dellink')}">删除</a>
+				<div class="table" v-el:table>
+					<form id="export-form" method="post" action="{:url('index')}">
+					<table class="layuitable">
+						<thead>
+							<tr>
+								<th width="50"><input class="i-checks checkbox check-all" type="checkbox"></th>
+								<th class="sort" width="80"><span>ID</span></th>
+								<th class="sort" width="200"><span>标题</span></th>
+								<th><span>链接地址</span></th>
+								<th class="sort" width="100"><span>图片</span></th>
+								<th class="sort" width="100"><span>位置</span></th>
+								<th class="sort" width="100"><span>排序</span></th>
+								<th width="150"><span>操作</span></th>
+							</tr>
+						</thead>
+						<tbody id="article_list">
+							{notempty name="infolist"}
+		                    	{volist name="infolist" id="v"}
+								<tr>
+									<td><input class="ids i-checks" type="checkbox" name="ck" ids="{$v.id}"></td>
+									<td>{$v.id}</td>
+									<td>{$v.title}</td>
+									<td>{$v.url}</td>
+									<td>{notempty name="v['pic']"}<a class="blue" href="{$v.pic}" target="_blank">【预览】</a>{/notempty}</td>
+									<td>{$v.wz}</td>
+									<td><input class="sort" type="number" maxlength="4" data-id="{$v.id}" value="{$v.sort}"/></td>
+									<td>
+										<a class="btn do-action" data-type="doEdit" data-href="{:url('editlink')}" data-id="{$v.id}">编辑</a>
+		                            	<a class="btn do-action" data-type="doDelOne" data-href="{:url('dellink',['ids'=>$v['id']])}">删除</a>
+									</td>
+								</tr>
+								{/volist}
+		                    {else /}
+		                        <td colspan="8" class="text-center"> 暂未发现数据! </td>
+		                    {/notempty}
+						</tbody>
+						<tbody>
+
+							<tr class="last_tr">
+								<td><input class="i-checks checkbox check-all" type="checkbox"></td>
+								<td colspan="7" class="tal">
+                                    <form  class="layui-form layui-form-pane" id="formrec" method="post" role="form">
+                                    <div style="float:left;" class="mr10">
+                                        <input id="area" type="hidden" name="area">
+                                        <a class="btn" id="open_diqu" style="height:37px;line-height:37px;">批量设置地区</a>          
+                                    </div>
+                                    </form>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+<script>
+    var laytpl,laypage;
+    layui.use(['layer', 'form', 'common', 'icheck'], function () {
+        var $ = layui.jquery, layer = layui.layer, common = layui.common, form = layui.form(),box = '#diqu';
+        laypage = layui.laypage;
+        //加载单选框样式
+        $(("[type='checkbox']")).iCheck({
+            checkboxClass: 'icheckbox_square-green',
+        });
+        //全选的实现
+        $('.check-all').on('ifChecked', function (event) {
+            $('input[name="ck"]').iCheck('check');
+        });
+        $('.check-all').on('ifUnchecked', function (event) {
+            $('input[name="ck"]').iCheck('uncheck');
+        });
+
+        $('#open_diqu').on('click', function(){
+            if (1 > $(".layuitable #article_list input:checked").size()){
+                layer.alert("对不起，请选中您要操作的记录！", { title: "提示", icon: 2, time: 5000, resize: false, zIndex: layer.zIndex });
+            }else{
+            	$.ajax({
+                    url: '{:url("content/getarea")}',
+                    dataType: "html",
+                    type: "POST",
+                    success: function(data){
+                		$(box).html(data);
+                        area_select($("#diqu input:checkbox"));
+                    }
+                }); 
+
+                var diqulay = layer.open({
+                    title: '选择地区',
+                    type: 1,
+                    content: $(box),
+                    skin: 'layer_diqu',
+                    area: ['60%','50%'],
+                    btn: '确定',
+                    yes: function(index, layero){
+                        var value = $("input:checkbox[name='diqu[]']:checked").map(function(index, el) {
+                            return $(el).val();
+                        }).get().join(',');
+                        for (var c = "", d = $(".layuitable #article_list input:checked"), e = 0; e < d.length; e++) d[e].checked && "disabled" != $(d[e]).attr("disabled") && (c += $(d[e]).attr("ids") + ",");
+                        $('#area').val(value);
+                        $.ajax({
+                            url: '{:url("movearea")}',
+                            dataType: "json",
+                            data:{'ids':c, aid:value},
+                            type: "POST",
+                            success: function(data){
+                                if(data.code == 1){
+                                    parent.layer.alert(data.msg, {
+                                        title: "提示", icon: 1, resize: false, zIndex: layer.zIndex
+                                    });
+                                    layer.close(diqulay);
+                                }
+                            }
+                        }); 
+                    }
+                });
+            }
+        });
+        diqu(layer, form, box);
+    });
+
+    $(document).on('blur','.sort', function () {
+        var id = $(this).attr('data-id');
+        var obs = $(this);
+        $.ajax({
+               	url: '{:url("sortlink")}',
+                dataType: "json",
+                data:{'id':id,'sort':obs.val()},
+                type: "POST",
+                success: function(data){
+                    //layer.msg(data.msg,{icon:1,time:500,shade: 0.1,});
+                },
+                error:function(ajaxobj)
+                {
+                    if(ajaxobj.responseText!='')
+                        alert(ajaxobj.responseText);
+                }
+            });
+      });
+</script>
+</body>
+</html>
